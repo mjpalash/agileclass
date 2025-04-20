@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Population Trend - Africa Eastern and Southern</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>Population Trend (Africa Eastern and Southern)</h2>
+  <canvas id="populationChart" width="800" height="400"></canvas>
+
+  <script>
+    async function fetchAndRenderChart() {
+      const response = await fetch("https://api.worldbank.org/v2/country/AFE/indicator/SP.POP.TOTL?format=xml&per_page=100");
+      const xmlText = await response.text();
+
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+
+      const dataNodes = xmlDoc.getElementsByTagName("wb:data");
+
+      const years = [];
+      const values = [];
+
+      for (let i = 0; i < dataNodes.length; i++) {
+        const date = dataNodes[i].getElementsByTagName("wb:date")[0].textContent;
+        const valueNode = dataNodes[i].getElementsByTagName("wb:value")[0];
+        const value = valueNode && valueNode.textContent;
+
+        if (value) {
+          years.push(date);
+          values.push(parseInt(value));
+        }
+      }
+
+      // Reverse to show in chronological order
+      years.reverse();
+      values.reverse();
+
+      const ctx = document.getElementById('populationChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: years,
+          datasets: [{
+            label: 'Total Population',
+            data: values,
+            borderColor: 'blue',
+            backgroundColor: 'lightblue',
+            fill: false,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Total Population of Africa Eastern and Southern (World Bank)'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Population'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Year'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    fetchAndRenderChart();
+  </script>
+</body>
+</html>
